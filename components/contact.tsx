@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Mail, Phone, MapPin, Send, MessageCircle, Calendar, CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
+import emailjs from "@emailjs/browser"
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -80,33 +81,38 @@ export function Contact() {
     setSubmitStatus("idle")
 
     try {
-      // Method 1: Using Formspree (Recommended - Easy Setup)
-      // Replace 'YOUR_FORM_ID' with your actual Formspree form ID
-      const formspreeResponse = await fetch("https://formspree.io/f/xqadzvlb", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
-          _replyto: formData.email,
-          _subject: `New Contact Form - ${formData.subject}`,
-          timestamp: new Date().toLocaleString("en-US", {
-            timeZone: "Asia/Karachi",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }),
+      // Initialize EmailJS (only needs to be done once, but safe to call multiple times)
+      // Replace these with your actual EmailJS keys
+      const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "example_service_id"
+      const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "example_template_id"
+      const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "example_public_key"
+
+      const time = new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Karachi",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
 
-      if (formspreeResponse.ok) {
-        console.log("✅ Email sent successfully via Formspree")
+      // Prepare template parameters
+      const templateParams = {
+        name: formData.name,
+        subject: formData.subject,
+        message: formData.message,
+        time: time,
+        reply_to: formData.email,
+        to_email: "syedameengillani512@gmail.com",
+      }
+
+      // Send email using EmailJS
+      const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, {
+        publicKey: PUBLIC_KEY,
+      })
+
+      if (result.status === 200) {
+        console.log("✅ Email sent successfully via EmailJS")
         setSubmitStatus("success")
 
         // Reset form after successful submission
@@ -120,7 +126,7 @@ export function Contact() {
         // Clear success message after 8 seconds
         setTimeout(() => setSubmitStatus("idle"), 8000)
       } else {
-        throw new Error(`Formspree error: ${formspreeResponse.status}`)
+        throw new Error(`EmailJS error: ${result.status}`)
       }
     } catch (error: any) {
       console.error("❌ Email sending failed:", error)
