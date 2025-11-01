@@ -81,11 +81,27 @@ export function Contact() {
     setSubmitStatus("idle")
 
     try {
-      // Initialize EmailJS (only needs to be done once, but safe to call multiple times)
-      // Replace these with your actual EmailJS keys
-      const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "example_service_id"
-      const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "example_template_id"
-      const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "example_public_key"
+      // Get EmailJS keys from environment variables
+      const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
+      const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+      const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+
+      // Validate that all keys are set
+      if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+        const missingKeys = []
+        if (!SERVICE_ID) missingKeys.push("NEXT_PUBLIC_EMAILJS_SERVICE_ID")
+        if (!TEMPLATE_ID) missingKeys.push("NEXT_PUBLIC_EMAILJS_TEMPLATE_ID")
+        if (!PUBLIC_KEY) missingKeys.push("NEXT_PUBLIC_EMAILJS_PUBLIC_KEY")
+        
+        console.error("❌ Missing EmailJS environment variables:", missingKeys)
+        throw new Error(`EmailJS configuration missing: ${missingKeys.join(", ")}. Please add these to your .env.local file or Vercel environment variables.`)
+      }
+
+      // Validate keys are not placeholders
+      if (SERVICE_ID.includes("example") || TEMPLATE_ID.includes("example") || PUBLIC_KEY.includes("example")) {
+        console.error("❌ EmailJS keys are still using placeholder values")
+        throw new Error("EmailJS keys are not configured. Please replace the placeholder values with your actual EmailJS keys.")
+      }
 
       const time = new Date().toLocaleString("en-US", {
         timeZone: "Asia/Karachi",
@@ -106,12 +122,19 @@ export function Contact() {
         to_email: "syedameengillani512@gmail.com",
       }
 
+      console.log("📧 Attempting to send email with EmailJS...")
+      console.log("Service ID:", SERVICE_ID)
+      console.log("Template ID:", TEMPLATE_ID)
+      console.log("Template Params:", templateParams)
+
       // Send email using EmailJS
       const result = await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, {
         publicKey: PUBLIC_KEY,
       })
 
-      if (result.status === 200) {
+      console.log("📬 EmailJS Response:", result)
+
+      if (result.status === 200 || result.text === "OK") {
         console.log("✅ Email sent successfully via EmailJS")
         setSubmitStatus("success")
 
@@ -126,10 +149,21 @@ export function Contact() {
         // Clear success message after 8 seconds
         setTimeout(() => setSubmitStatus("idle"), 8000)
       } else {
-        throw new Error(`EmailJS error: ${result.status}`)
+        throw new Error(`EmailJS returned status: ${result.status}, text: ${result.text}`)
       }
     } catch (error: any) {
       console.error("❌ Email sending failed:", error)
+      console.error("Error details:", {
+        message: error.message,
+        status: error.status,
+        text: error.text,
+        stack: error.stack,
+      })
+      
+      // Show more detailed error message
+      const errorMessage = error.message || "Unknown error occurred"
+      console.error("Error message:", errorMessage)
+      
       setSubmitStatus("error")
       setTimeout(() => setSubmitStatus("idle"), 8000)
     } finally {
