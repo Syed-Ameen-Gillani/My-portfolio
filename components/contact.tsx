@@ -124,57 +124,8 @@ export function Contact() {
       }
     } catch (error: any) {
       console.error("❌ Email sending failed:", error)
-
-      // Fallback: Try Web3Forms (Alternative service)
-      try {
-        console.log("🔄 Trying Web3Forms as fallback...")
-
-        const web3FormsResponse = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            access_key: "YOUR_WEB3FORMS_KEY", // Replace with your Web3Forms access key
-            name: formData.name,
-            email: formData.email,
-            subject: `Portfolio Contact: ${formData.subject}`,
-            message: `
-Name: ${formData.name}
-Email: ${formData.email}
-Subject: ${formData.subject}
-Timestamp: ${new Date().toLocaleString("en-US", { timeZone: "Asia/Karachi" })}
-
-Message:
-${formData.message}
-            `,
-            to: "syedameengillani512@gmail.com",
-          }),
-        })
-
-        const web3Result = await web3FormsResponse.json()
-
-        if (web3Result.success) {
-          console.log("✅ Email sent successfully via Web3Forms")
-          setSubmitStatus("success")
-
-          // Reset form
-          setFormData({
-            name: "",
-            email: "",
-            subject: "",
-            message: "",
-          })
-
-          setTimeout(() => setSubmitStatus("idle"), 8000)
-        } else {
-          throw new Error("Both services failed")
-        }
-      } catch (fallbackError) {
-        console.error("❌ All email services failed:", fallbackError)
-        setSubmitStatus("error")
-        setTimeout(() => setSubmitStatus("idle"), 8000)
-      }
+      setSubmitStatus("error")
+      setTimeout(() => setSubmitStatus("idle"), 8000)
     } finally {
       setIsSubmitting(false)
     }
