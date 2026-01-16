@@ -189,7 +189,7 @@ export function Hero() {
                 {/* Main image container */}
                 <div className="relative w-80 h-80 md:w-96 md:h-96 lg:w-[450px] lg:h-[450px] rounded-full overflow-hidden border-8 border-white dark:border-gray-800 shadow-2xl">
                   <img
-                    src="/profile/ameen_gillani.jpg"
+                    src="/profile/ameen_gillani.jpeg"
                     alt="Syed Ameen Gillani - Flutter Developer"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
